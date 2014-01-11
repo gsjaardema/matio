@@ -41,6 +41,9 @@
 #   include <zlib.h>
 #endif
 
+#undef min
+#define min(a,b) ((a)<(b)) ? (a) : (b);
+
 /*
  * --------------------------------------------------------------------------
  *    Routines to read data of any type into arrays of a specific type
@@ -3676,6 +3679,14 @@ ReadCompressedCharData(mat_t *mat,z_stream *z,char *data,
     enum matio_types data_type,int len)
 {
     int nBytes = 0, data_size = 0, i;
+    union _buf {
+        mat_int32_t   i32[256];
+        mat_uint32_t ui32[256];
+        mat_int16_t   i16[512];
+        mat_uint16_t ui16[512];
+        mat_int8_t     i8[1024];
+        mat_uint8_t   ui8[1024];
+    } buf;
 
     if ( (mat   == NULL) || (data   == NULL) || (mat->fp == NULL) )
         return 0;
@@ -3683,32 +3694,47 @@ ReadCompressedCharData(mat_t *mat,z_stream *z,char *data,
     switch ( data_type ) {
         case MAT_T_UTF8:
             data_size = 1;
-            for ( i = 0; i < len; i++ )
-                InflateData(mat,z,data+i,data_size);
+            InflateData(mat,z,data,len);
             break;
         case MAT_T_INT8:
         case MAT_T_UINT8:
             data_size = 1;
-            for ( i = 0; i < len; i++ )
-                InflateData(mat,z,data+i,data_size);
+            InflateData(mat,z,data,len);
             break;
         case MAT_T_INT16:
+        {
+            size_t k = 0, N;
+            while ( k < len ) {
+                N = min(512,len-k);
+                InflateData(mat,z,&buf.i16,2*N);
+                if ( mat->byteswap ) {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = Mat_int16Swap(buf.i16+i);
+                } else {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = buf.i16[i];
+                }
+                k += N;
+            }
+            data_size = 2;
+            break;
+        }
         case MAT_T_UINT16:
         {
-            mat_uint16_t i16;
-
-            data_size = 2;
-            if ( mat->byteswap ) {
-                for ( i = 0; i < len; i++ ) {
-                    InflateData(mat,z,&i16,data_size);
-                    data[i] = Mat_uint16Swap(&i16);
+            size_t k = 0, N;
+            while ( k < len ) {
+                N = min(512,len-k);
+                InflateData(mat,z,&buf.ui16,2*N);
+                if ( mat->byteswap ) {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = Mat_uint16Swap(buf.ui16+i);
+                } else {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = buf.ui16[i];
                 }
-            } else {
-                for ( i = 0; i < len; i++ ) {
-                    InflateData(mat,z,&i16,data_size);
-                    data[i] = i16;
-                }
+                k += N;
             }
+            data_size = 2;
             break;
         }
         default:
@@ -3724,35 +3750,57 @@ int
 ReadCharData(mat_t *mat,char *data,enum matio_types data_type,int len)
 {
     int bytesread = 0, data_size = 0, i;
+    union _buf {
+        mat_int32_t   i32[256];
+        mat_uint32_t ui32[256];
+        mat_int16_t   i16[512];
+        mat_uint16_t ui16[512];
+        mat_int8_t     i8[1024];
+        mat_uint8_t   ui8[1024];
+    } buf;
 
     if ( (mat   == NULL) || (data   == NULL) || (mat->fp == NULL) )
         return 0;
 
     switch ( data_type ) {
         case MAT_T_UTF8:
-            for ( i = 0; i < len; i++ )
-                bytesread += fread(data+i,1,1,mat->fp);
+            bytesread += fread(data,1,len,mat->fp);
             break;
         case MAT_T_INT8:
         case MAT_T_UINT8:
-            for ( i = 0; i < len; i++ )
-                bytesread += fread(data+i,1,1,mat->fp);
+            bytesread += fread(data,1,len,mat->fp);
             break;
         case MAT_T_INT16:
+        {
+            size_t k = 0, N;
+            while ( k < len ) {
+                N = min(512,len-k);
+                bytesread += fread(buf.i16,2,N,mat->fp);
+                if ( mat->byteswap ) {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = Mat_int16Swap(buf.i16+i);
+                } else {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = buf.i16[i];
+                }
+                k += N;
+            }
+            break;
+        }
         case MAT_T_UINT16:
         {
-            mat_uint16_t i16;
-
-            if ( mat->byteswap ) {
-                for ( i = 0; i < len; i++ ) {
-                    bytesread += fread(&i16,2,1,mat->fp);
-                    data[i] = Mat_uint16Swap(&i16);
+            size_t k = 0, N;
+            while ( k < len ) {
+                N = min(512,len-k);
+                bytesread += fread(buf.ui16,2,N,mat->fp);
+                if ( mat->byteswap ) {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = Mat_uint16Swap(buf.ui16+i);
+                } else {
+                    for ( i = 0; i < N; i++ )
+                        data[i] = buf.ui16[i];
                 }
-            } else {
-                for ( i = 0; i < len; i++ ) {
-                    bytesread += fread(&i16,2,1,mat->fp);
-                    data[i] = i16;
-                }
+                k += N;
             }
             break;
         }
