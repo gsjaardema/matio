@@ -5991,7 +5991,9 @@ WriteInfo5(mat_t *mat, matvar_t *matvar)
             matvar->internal->z->next_out  = comp_buf;
             matvar->internal->z->avail_out = buf_size*sizeof(*comp_buf);
             err = deflate(matvar->internal->z,Z_NO_FLUSH);
-            byteswritten += fwrite(comp_buf,1,buf_size*sizeof(*comp_buf)-matvar->internal->z->avail_out,mat->fp);
+            byteswritten += fwrite(comp_buf,1,
+                buf_size*sizeof(*comp_buf)-matvar->internal->z->avail_out,
+                mat->fp);
         } while ( matvar->internal->z->avail_out == 0 );
         uncomp_buf[0] = array_flags_type;
         uncomp_buf[1] = array_flags_size;
