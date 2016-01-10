@@ -1762,7 +1762,7 @@ ReadNextCell( mat_t *mat, matvar_t *matvar )
                 bytesread+=ReadNextStructField(mat,cells[i]);
             else if ( cells[i]->class_type == MAT_C_CELL )
                 bytesread+=ReadNextCell(mat,cells[i]);
-            else if (nbytes <= (1 << MAX_WBITS)) {
+            else if ( nbytes <= (1 << MAX_WBITS) ) {
                 /* Memory optimization: Read data if less in size
                    than the zlib inflate state (approximately) */
                 cells[i]->internal->fp = mat;
@@ -1770,9 +1770,9 @@ ReadNextCell( mat_t *mat, matvar_t *matvar )
             }
             fseek(mat->fp,cells[i]->internal->datapos,SEEK_SET);
             bytesread+=InflateSkip(mat,matvar->internal->z,nbytes);
-            if ( nbytes <= (1 << MAX_WBITS) ||
+            if ( cells[i]->data != NULL && (nbytes <= (1 << MAX_WBITS) ||
                 cells[i]->class_type == MAT_C_STRUCT ||
-                cells[i]->class_type == MAT_C_CELL ) {
+                cells[i]->class_type == MAT_C_CELL) ) {
                 /* Memory optimization: Free inflate state */
                 inflateEnd(cells[i]->internal->z);
                 free(cells[i]->internal->z);
@@ -2067,7 +2067,7 @@ ReadNextStructField( mat_t *mat, matvar_t *matvar )
                 bytesread+=ReadNextStructField(mat,fields[i]);
             else if ( fields[i]->class_type == MAT_C_CELL )
                 bytesread+=ReadNextCell(mat,fields[i]);
-            else if (nbytes <= (1 << MAX_WBITS)) {
+            else if ( nbytes <= (1 << MAX_WBITS) ) {
                 /* Memory optimization: Read data if less in size
                    than the zlib inflate state (approximately) */
                 fields[i]->internal->fp = mat;
@@ -2075,9 +2075,9 @@ ReadNextStructField( mat_t *mat, matvar_t *matvar )
             }
             fseek(mat->fp,fields[i]->internal->datapos,SEEK_SET);
             bytesread+=InflateSkip(mat,matvar->internal->z,nbytes);
-            if ( nbytes <= (1 << MAX_WBITS) ||
+            if ( fields[i]->data != NULL && (nbytes <= (1 << MAX_WBITS) ||
                 fields[i]->class_type == MAT_C_STRUCT ||
-                fields[i]->class_type == MAT_C_CELL ) {
+                fields[i]->class_type == MAT_C_CELL) ) {
                 /* Memory optimization: Free inflate state */
                 inflateEnd(fields[i]->internal->z);
                 free(fields[i]->internal->z);
