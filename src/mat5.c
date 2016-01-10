@@ -1771,8 +1771,8 @@ ReadNextCell( mat_t *mat, matvar_t *matvar )
             fseek(mat->fp,cells[i]->internal->datapos,SEEK_SET);
             bytesread+=InflateSkip(mat,matvar->internal->z,nbytes);
             if ( nbytes <= (1 << MAX_WBITS) ||
-                fields[i]->class_type == MAT_C_STRUCT ||
-                fields[i]->class_type == MAT_C_CELL ) {
+                cells[i]->class_type == MAT_C_STRUCT ||
+                cells[i]->class_type == MAT_C_CELL ) {
                 /* Memory optimization: Free inflate state */
                 inflateEnd(cells[i]->internal->z);
                 free(cells[i]->internal->z);
