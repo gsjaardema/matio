@@ -1766,7 +1766,7 @@ ReadNextCell( mat_t *mat, matvar_t *matvar )
                 /* Memory optimization: Read data if less in size
                    than the zlib inflate state (approximately) */
                 cells[i]->internal->fp = mat;
-                ReadData(mat,cells[i]);
+                Mat_VarReadDataAll(mat,cells[i]);
             }
             fseek(mat->fp,cells[i]->internal->datapos,SEEK_SET);
             bytesread+=InflateSkip(mat,matvar->internal->z,nbytes);
@@ -2071,7 +2071,7 @@ ReadNextStructField( mat_t *mat, matvar_t *matvar )
                 /* Memory optimization: Read data if less in size
                    than the zlib inflate state (approximately) */
                 fields[i]->internal->fp = mat;
-                ReadData(mat,fields[i]);
+                Mat_VarReadDataAll(mat,fields[i]);
             }
             fseek(mat->fp,fields[i]->internal->datapos,SEEK_SET);
             bytesread+=InflateSkip(mat,matvar->internal->z,nbytes);
