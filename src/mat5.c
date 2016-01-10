@@ -4165,6 +4165,7 @@ Read5(mat_t *mat, matvar_t *matvar)
             }
             if ( nBytes == 0 ) {
                 matvar->nbytes = 0;
+                matvar->data   = calloc(0,1);
                 break;
             }
             matvar->data_size = sizeof(char);
