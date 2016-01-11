@@ -1189,7 +1189,7 @@ Mat_VarFree2(matvar_t *matvar)
  * \f]
  * @ingroup MAT
  * @param rank Rank of the variable
- * @param dims dimensions of the variable
+ * @param dims Dimensions of the variable
  * @param subs Array of dimension subscripts
  * @return Single (linear) subscript
  */
